@@ -13,10 +13,21 @@
   <main>
     <header>
       <div><h1>Coglet diagnostics</h1><p>A quiet workbench for your companion.</p></div>
-      <span id="connection" role="status">Disconnected</span>
     </header>
+    <div class="mode-navigation">
+      <div class="mode-tabs" role="tablist" aria-label="Diagnostics options">
+        <button id="logging-tab" type="button" role="tab" aria-selected="true" aria-controls="logging-panel">Logging</button>
+        <button id="motion-tab" type="button" role="tab" aria-selected="false" aria-controls="motion-panel" tabindex="-1">Motion</button>
+        <button id="firmware-tab" type="button" role="tab" aria-selected="false" aria-controls="firmware-panel" tabindex="-1">Firmware</button>
+      </div>
+      <button id="motion-stop" class="stop" disabled>Stop &amp; disable PWM</button>
+    </div>
+    <p class="tab-help">Switching tabs preserves logs, connections, active motion, and uploads. Disconnect before changing the board's USB selector.</p>
+    <p id="motion-stop-status" role="status" hidden></p>
+    <section id="logging-panel" role="tabpanel" aria-labelledby="logging-tab" tabindex="0">
     <section class="connection-bar" aria-label="USB connection">
       <div><strong>USB serial console</strong><p>115200 baud · read-only · logs stay in this browser</p></div>
+      <span id="connection" role="status">Disconnected</span>
       <button id="connect" class="primary">Connect Coglet</button>
       <button id="disconnect" disabled>Disconnect</button>
     </section>
@@ -24,7 +35,7 @@
     <div class="workspace">
       <section class="diagnostics" aria-labelledby="diagnostics-title">
         <h2 id="diagnostics-title">Diagnostic evidence</h2>
-        <p>Review captured messages, not hardware health. No firmware commands are sent.</p>
+        <p>Review captured messages, not hardware health. Log analysis sends no firmware commands.</p>
         <button id="analyze" class="primary" disabled>Run diagnostics</button>
         <p id="analysis-status" role="status">Waiting for log data.</p>
         <div id="results"><p class="empty">Your diagnostic report will appear here, with the log lines behind each finding.</p></div>
@@ -49,6 +60,77 @@ Already have a log? Import it below.</span></pre>
         </div>
       </section>
     </div>
+    </section>
+    <section id="motion-panel" class="motion" role="tabpanel" aria-labelledby="motion-tab" tabindex="0" hidden>
+      <div class="section-heading"><h2 id="motion-title">Servos &amp; animations</h2><span id="motion-connection" role="status">Disconnected</span></div>
+      <p>Connect the <strong>RP2040 USB port</strong> separately from the ESP32 log console. Updated RP2040 firmware is required. Connecting does not request movement.</p>
+      <div class="motion-tools">
+        <button id="motion-connect">Connect motion USB</button>
+        <button id="motion-disconnect" disabled>Disconnect motion</button>
+      </div>
+      <p class="motion-safety">Movement can pinch fingers or strain linkages. Clear the mechanism and use its calibrated limits. Stop disables PWM, not servo power; unsupported parts may drop. Physical Calibration Mode always has priority.</p>
+      <label class="arm-label"><input id="motion-arm" type="checkbox" disabled> I have cleared the mechanism. Enable motion controls.</label>
+      <p id="motion-notice" role="status">Connect motion USB to load servo limits and available animations from the firmware.</p>
+      <div class="motion-forms">
+        <form id="servo-form">
+          <fieldset id="servo-controls" disabled>
+            <legend>Individual servo</legend>
+            <label>Servo<select id="servo-name"><option value="">Connect motion USB first</option></select></label>
+            <label>Target angle (degrees)<input id="servo-angle" type="number" step="1" required></label>
+            <p id="servo-limits">Limits are supplied by the connected RP2040.</p>
+            <button type="submit">Apply servo target</button>
+          </fieldset>
+        </form>
+        <form id="animation-form">
+          <fieldset id="animation-controls" disabled>
+            <legend>Animation preview</legend>
+            <label>Preset<select id="animation-name"><option value="">Connect motion USB first</option></select></label>
+            <p>Previews replace normal motion and pause face tracking. Expressions run until stopped; one-shot actions run for two seconds, then hold.</p>
+            <button type="submit">Play animation</button>
+          </fieldset>
+        </form>
+      </div>
+      <div class="motion-footer"><button id="motion-resume" disabled>Resume normal behavior</button><p>Normal behavior may move the robot. If a USB override loses its heartbeat for 5 seconds, PWM is disabled until you request motion again or physical calibration takes control.</p></div>
+    </section>
+    <section id="firmware-panel" class="firmware" role="tabpanel" aria-labelledby="firmware-tab" tabindex="0" hidden>
+      <div class="section-heading"><h2>Upload RP2040 Python files</h2><span id="firmware-connection" role="status">Disconnected</span></div>
+      <p>Install local <code>.py</code> files through MicroPython's built-in USB REPL, including the first diagnostics update. MicroPython must already be installed; this does not flash UF2 or update the ESP32.</p>
+      <div class="firmware-workspace">
+        <section aria-labelledby="firmware-prepare-title">
+          <h3 id="firmware-prepare-title">Prepare the board</h3>
+          <p class="motion-safety">Support the mechanism and disconnect the external 5 V servo supply. USB can power the logic. Connecting here interrupts the running program; motion Stop and heartbeat protection no longer apply in the REPL.</p>
+          <p>Set Programming Selector to <strong>RP2040 (lower)</strong>, Calibration and Face Tracking <strong>OFF (right)</strong>, and Main Power <strong>OFF (right)</strong>. Leave BOOT and Servo Test released. Close Thonny and disconnect Logging and Motion first.</p>
+          <label class="arm-label"><input id="firmware-safe" type="checkbox"> I have disconnected external servo power, supported the mechanism, and set these switches. I agree to interrupt the program.</label>
+          <p id="firmware-blocked" class="error" hidden>Disconnect Logging and Motion before opening firmware USB. Existing sessions will not be closed for you.</p>
+          <div class="motion-tools">
+            <button id="firmware-connect" disabled>Connect for upload</button>
+            <button id="firmware-disconnect" disabled>Disconnect firmware USB</button>
+          </div>
+        </section>
+        <section aria-labelledby="firmware-files-title">
+          <h3 id="firmware-files-title">Review files to replace</h3>
+          <p>For this diagnostics update, choose <code>animation.py</code>, <code>diagnostics_control.py</code>, and <code>main.py</code> from <code>CogletESP\RP2040</code>. Keep the board's existing <code>servoclass.py</code> and <code>vision.py</code> unless intentionally updating them.</p>
+          <label class="import-label firmware-picker">Python files<input id="firmware-files" type="file" multiple accept=".py" aria-describedby="firmware-file-help"></label>
+          <p id="firmware-file-help">Root filenames only. UTF-8 source, up to 16 files, 96 KiB per file and 256 KiB total. Files stay local until you upload them to the selected RP2040.</p>
+          <ul id="firmware-file-list" aria-label="Selected upload destinations"></ul>
+          <label class="arm-label"><input id="firmware-confirm" type="checkbox" disabled> Replace the root files listed above, retaining previous versions in a new backup folder on the RP2040.</label>
+          <div class="motion-tools"><button id="firmware-upload" class="primary" disabled>Upload &amp; verify files</button></div>
+        </section>
+      </div>
+      <progress id="firmware-progress" max="1" value="0" aria-label="Bytes staged on RP2040" hidden></progress>
+      <p id="firmware-notice" role="status">Prepare the board before connecting. Uploads check SHA-256 and Python syntax without running the selected files.</p>
+      <pre id="firmware-result" aria-label="Installed files and device backups"></pre>
+      <p class="firmware-recovery">Keep USB connected until finished. A failed staging check leaves root files unchanged; an interrupted replacement may require recovery from the backup folder. Nothing restarts automatically. Disconnect firmware USB and manually press <button id="reset-guide-trigger" class="reset-guide-trigger" type="button" popovertarget="reset-guide" aria-controls="reset-guide" aria-expanded="false" aria-haspopup="dialog" aria-label="Show the location of the physical RP2040 RESET button">RP2040 RESET</button> only when ready for startup movement.</p>
+      <aside id="reset-guide" class="reset-guide-popover" popover role="dialog" aria-labelledby="reset-guide-title" aria-describedby="reset-guide-warning">
+        <div class="section-heading"><h3 id="reset-guide-title">Where to press RP2040 RESET</h3><button type="button" popovertarget="reset-guide" popovertargetaction="hide" aria-label="Close reset button guide">Close</button></div>
+        <figure>
+          <img src="assets/rp2040-reset-detail.png" width="810" height="570" alt="CogNog V3.0 control detail. An orange outline and arrow highlight RP2040 RESET, between SERVO TEST and RP2040 BOOT.">
+          <figcaption>Press the highlighted physical button, between <strong>SERVO TEST</strong> and <strong>RP2040 BOOT</strong>. It is <strong>not ESP RESET</strong> beside the USB connector.</figcaption>
+        </figure>
+        <p id="reset-guide-warning" class="motion-safety">Keep external servo power disconnected and the mechanism clear. Reset can restore PWM and startup movement. This guide sends no reset command.</p>
+        <p class="reset-guide-source"><a href="assets/rp2040-reset-pinout.png" target="_blank" rel="noopener">Full annotated pinout</a> &middot; <a href="https://github.com/will-cogley/Coglet/blob/main/CogNogDatasheet.md" target="_blank" rel="noopener">CogNog V3.0 datasheet</a>. Check the labels if your board revision differs.</p>
+      </aside>
+    </section>
     <footer><p>Use Chrome or Edge on desktop, served from localhost or HTTPS. Close other serial monitors first.</p><p>Exports may include private conversation text. Review before sharing.</p></footer>
   </main>
 </body>

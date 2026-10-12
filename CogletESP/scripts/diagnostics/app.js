@@ -1,4 +1,7 @@
 import { LogBuffer, analyze } from "./diagnostics.js";
+import { setupMotion } from "./motion.js";
+import { setupTabs } from "./tabs.js";
+import { setupFirmware } from "./firmware.js";
 
 const $ = id => document.getElementById(id);
 const buffer = new LogBuffer();
@@ -9,6 +12,7 @@ let busy = false;
 let paused = false;
 let dirty = false;
 let analyzedTotal = null;
+let firmware = null;
 const supportsSerial = isSecureContext && "serial" in navigator;
 
 function notice(message, error = false) {
@@ -18,7 +22,7 @@ function notice(message, error = false) {
 
 function controls() {
   const hasData = buffer.lines.length > 0;
-  $("connect").disabled = !supportsSerial || port !== null || busy;
+  $("connect").disabled = !supportsSerial || port !== null || busy || firmware?.connected === true;
   $("disconnect").disabled = port === null || reader === null || closing;
   $("import").disabled = port !== null || busy;
   $("pause").disabled = !hasData;
@@ -37,6 +41,7 @@ function updateCapture() {
 }
 
 function renderLog() {
+  if ($("logging-panel").hidden) return;
   const log = $("log");
   const follow = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
   const search = $("search").value.toLowerCase();
@@ -66,7 +71,7 @@ function received(text) {
 }
 
 async function connect() {
-  if (port !== null || busy) return;
+  if (port !== null || busy || firmware?.connected) return;
   busy = true;
   controls();
   let selected;
@@ -86,7 +91,7 @@ async function connect() {
     await port.open({ baudRate: 115200, flowControl: "none" });
     $("connection").textContent = "Connected · USB";
     $("connection").classList.add("live");
-    notice("Capturing serial logs. This UI sends no commands. Opening some USB adapters may reset the board.");
+    notice("Capturing serial logs. This log connection sends no commands. Opening some USB adapters may reset the board.");
     const decoder = new TextDecoder();
     if (!port.readable) throw new Error("The selected port has no readable stream.");
     reader = port.readable.getReader();
@@ -228,6 +233,9 @@ $("import").addEventListener("change", async event => {
   }
 });
 setInterval(() => {
+  firmware?.updateControls();
+  motion.updateControls();
+  controls();
   if (!dirty) return;
   dirty = false;
   updateCapture();
@@ -235,3 +243,12 @@ setInterval(() => {
 }, 150);
 controls();
 if (!supportsSerial) notice("USB connection needs desktop Chrome or Edge on localhost or HTTPS. Saved-log import and diagnostics still work here.", true);
+for (const event of ["animationend", "animationcancel"]) {
+  $("results").addEventListener(event, () => $("results").classList.remove("report-ready"));
+}
+$("logging-panel").addEventListener("tabshown", () => {
+  if (!paused) renderLog();
+});
+const motion = setupMotion(() => firmware?.connected === true);
+firmware = setupFirmware(() => port !== null || busy || motion.connected);
+setupTabs();

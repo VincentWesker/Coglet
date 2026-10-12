@@ -8,7 +8,8 @@ Refer to the [build video](https://www.youtube.com/watch?v=-7I-jFSNP2E).
 
 For further reading and troubleshooting, refer to the translated docs in this repo.
 
-For a read-only USB log viewer and captured-log diagnostics, see the
+For a read-only ESP32 log viewer, captured-log diagnostics, and separate RP2040
+servo and animation controls, and a browser-based RP2040 Python-file uploader, see the
 [Coglet diagnostics UI](CogletESP/scripts/diagnostics/README.md).
 
 
