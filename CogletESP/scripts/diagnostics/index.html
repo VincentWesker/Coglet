@@ -71,11 +71,37 @@ Already have a log? Import it below.</span></pre>
       <p class="motion-safety">Movement can pinch fingers or strain linkages. Clear the mechanism and use its calibrated limits. Stop disables PWM, not servo power; unsupported parts may drop. Physical Calibration Mode always has priority.</p>
       <label class="arm-label"><input id="motion-arm" type="checkbox" disabled> I have cleared the mechanism. Enable motion controls.</label>
       <p id="motion-notice" role="status">Connect motion USB to load servo limits and available animations from the firmware.</p>
-      <div class="motion-forms">
+      <div class="motion-workbench">
+        <figure class="servo-map">
+          <div class="servo-image">
+            <img id="coglet-image" src="https://cdn.shopify.com/s/files/1/0918/8612/5385/files/Remove_hand_and_screwdriver_from_photo.png?v=1790591214&amp;width=800" width="800" height="799" loading="lazy" referrerpolicy="no-referrer" alt="Yellow Coglet with exposed eye and neck mechanisms. Labeled buttons identify the servo-controlled parts.">
+            <div id="servo-hotspots" role="group" aria-label="Select a servo on Coglet">
+              <button type="button" data-servo="EAR" style="--x:25%;--y:25%" aria-label="Select right ear" aria-pressed="false" title="Right ear (robot's right)" disabled>EAR</button>
+              <button type="button" data-servo="EAL" style="--x:60%;--y:15%" aria-label="Select left ear" aria-pressed="false" title="Left ear (robot's left)" disabled>EAL</button>
+              <button type="button" data-servo="EYR" style="--x:43%;--y:46%" aria-label="Select right eye" aria-pressed="false" title="Right eye (robot's right)" disabled>EYR</button>
+              <button type="button" data-servo="EYL" style="--x:67%;--y:43%" aria-label="Select left eye" aria-pressed="false" title="Left eye (robot's left)" disabled>EYL</button>
+              <button type="button" data-servo="LID" style="--x:65%;--y:34%" aria-label="Select eyelid" aria-pressed="false" title="Eyelid" disabled>LID</button>
+              <button type="button" data-servo="MOU" style="--x:59%;--y:55%" aria-label="Select mouth" aria-pressed="false" title="Mouth" disabled>MOU</button>
+              <button type="button" data-servo="ROL" style="--x:36%;--y:70%" aria-label="Select neck roll" aria-pressed="false" title="Neck roll" disabled>ROL</button>
+              <button type="button" data-servo="PIT" style="--x:62%;--y:76%" aria-label="Select neck pitch" aria-pressed="false" title="Neck pitch" disabled>PIT</button>
+              <button type="button" data-servo="YAW" style="--x:50%;--y:92%" aria-label="Select base yaw" aria-pressed="false" title="Base yaw" disabled>YAW</button>
+            </div>
+          </div>
+          <figcaption>Click a labeled part, then use the arrows to move it. Left and right refer to the robot, not the viewer. <a href="https://nmrobots.com/products/coglet-2" target="_blank" rel="noopener noreferrer">Photo: Will Cogley / NMRobotics</a>.</figcaption>
+          <p id="servo-image-error" class="error" hidden>Coglet photo could not load. Use the labeled targets or servo selector below.</p>
+        </figure>
+        <div class="motion-forms">
         <form id="servo-form">
           <fieldset id="servo-controls" disabled>
             <legend>Individual servo</legend>
             <label>Servo<select id="servo-name"><option value="">Connect motion USB first</option></select></label>
+            <div class="servo-jog" role="group" aria-label="Immediate servo movement" aria-describedby="servo-jog-help">
+              <button id="servo-decrease" type="button" aria-label="Decrease servo target by 1 degree" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg><span>-1&deg;</span></button>
+              <div><strong id="servo-selected">No servo selected</strong><output id="servo-target" aria-live="polite">Not connected</output><span>Requested target</span></div>
+              <button id="servo-increase" type="button" aria-label="Increase servo target by 1 degree" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg><span>+1&deg;</span></button>
+            </div>
+            <p id="servo-jog-help">Each arrow click, or Left/Right Arrow key press, applies one step immediately. Arrows change the servo angle, not a guaranteed physical direction. No movement until controls are enabled.</p>
+            <label>Step size<select id="servo-step"><option value="1" selected>1&deg;</option><option value="2">2&deg;</option><option value="5">5&deg;</option><option value="10">10&deg;</option></select></label>
             <label>Target angle (degrees)<input id="servo-angle" type="number" step="1" required></label>
             <p id="servo-limits">Limits are supplied by the connected RP2040.</p>
             <button type="submit">Apply servo target</button>
@@ -89,6 +115,7 @@ Already have a log? Import it below.</span></pre>
             <button type="submit">Play animation</button>
           </fieldset>
         </form>
+        </div>
       </div>
       <div class="motion-footer"><button id="motion-resume" disabled>Resume normal behavior</button><p>Normal behavior may move the robot. If a USB override loses its heartbeat for 5 seconds, PWM is disabled until you request motion again or physical calibration takes control.</p></div>
     </section>

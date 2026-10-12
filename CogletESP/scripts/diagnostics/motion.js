@@ -163,6 +163,7 @@ export function setupMotion(firmwareConnected = () => false) {
   let heartbeatPending = false;
   let capabilities = null;
   let ownsMotion = false;
+  const hotspots = [...$("servo-hotspots").querySelectorAll("[data-servo]")];
 
   function notice(text, error = false) {
     $("motion-notice").textContent = text;
@@ -183,6 +184,14 @@ export function setupMotion(firmwareConnected = () => false) {
     $("motion-stop").disabled = !ready || calibrating;
     $("motion-connection").textContent = ready ? (calibrating ? "Calibration owns motion" : "Connected · RP2040") : connection ? "Connecting…" : "Disconnected";
     $("motion-connection").classList.toggle("live", ready);
+    for (const button of hotspots) {
+      button.disabled = !ready || busy || !capabilities?.servos.some(servo => servo.name === button.dataset.servo);
+      button.setAttribute("aria-pressed", String(ready && button.dataset.servo === $("servo-name").value));
+    }
+    const angle = Number($("servo-angle").value);
+    const validAngle = ready && $("servo-angle").checkValidity();
+    $("servo-decrease").disabled = !armed || busy || !validAngle || angle <= Number($("servo-angle").min);
+    $("servo-increase").disabled = !armed || busy || !validAngle || angle >= Number($("servo-angle").max);
   }
   async function shutdown() {
     clearInterval(heartbeat);
@@ -237,6 +246,10 @@ export function setupMotion(firmwareConnected = () => false) {
     controls();
     try {
       await connection.send(name, fields);
+      if (name === "servo") {
+        capabilities.servos.find(servo => servo.name === fields.name).target = fields.angle;
+        $("servo-target").textContent = `${fields.angle}°`;
+      }
       ownsMotion = ["servo", "animation", "action"].includes(name);
       notice(name === "stop" ? "RP2040 acknowledged stop. PWM disabled; servo power remains on." :
         name === "resume" ? "RP2040 acknowledged resume. Normal ESP32 animations and face tracking may move the robot." :
@@ -254,7 +267,10 @@ export function setupMotion(firmwareConnected = () => false) {
     $("servo-angle").min = servo.min;
     $("servo-angle").max = servo.max;
     $("servo-angle").value = Math.min(servo.max, Math.max(servo.min, servo.target));
+    $("servo-selected").textContent = labels[servo.name];
+    $("servo-target").textContent = `${$("servo-angle").value}°`;
     $("servo-limits").textContent = `Socket ${servo.socket} · ${servo.min}–${servo.max}° firmware limits. Value is a requested target, not a measured position.`;
+    controls();
   }
   function populate() {
     $("servo-name").replaceChildren(...capabilities.servos.map(servo => new Option(labels[servo.name], servo.name)));
@@ -319,6 +335,40 @@ export function setupMotion(firmwareConnected = () => false) {
     if (!$("motion-arm").checked) void command("stop");
   });
   $("servo-name").addEventListener("change", selectServo);
+  for (const button of hotspots) {
+    button.addEventListener("click", () => {
+      if (button.disabled) return;
+      $("servo-name").value = button.dataset.servo;
+      selectServo();
+    });
+  }
+  $("coglet-image").addEventListener("error", () => { $("servo-image-error").hidden = false; });
+  $("servo-angle").addEventListener("input", controls);
+  const showStep = () => {
+    const step = $("servo-step").value;
+    for (const [id, sign, verb] of [["servo-decrease", "-", "Decrease"], ["servo-increase", "+", "Increase"]]) {
+      $(id).setAttribute("aria-label", `${verb} servo target by ${step} degree${step === "1" ? "" : "s"}`);
+      $(id).querySelector("span").textContent = `${sign}${step}°`;
+    }
+  };
+  $("servo-step").addEventListener("change", showStep);
+  showStep();
+  for (const [id, sign] of [["servo-decrease", -1], ["servo-increase", 1]]) {
+    $(id).addEventListener("click", () => {
+      if ($(id).disabled || !$("servo-angle").reportValidity()) return;
+      const angle = Math.min(Number($("servo-angle").max),
+        Math.max(Number($("servo-angle").min), Number($("servo-angle").value) + sign * Number($("servo-step").value)));
+      $("servo-angle").value = angle;
+      void command("servo", { name: $("servo-name").value, angle });
+    });
+  }
+  document.addEventListener("keydown", event => {
+    const id = { ArrowLeft: "servo-decrease", ArrowRight: "servo-increase" }[event.key];
+    if (!id || event.repeat || $("motion-panel").hidden || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+        event.target?.closest?.("input, select, textarea, [role=tab]")) return;
+    event.preventDefault();
+    $(id).click();
+  });
   $("servo-form").addEventListener("submit", event => {
     event.preventDefault();
     if ($("servo-angle").reportValidity()) {
