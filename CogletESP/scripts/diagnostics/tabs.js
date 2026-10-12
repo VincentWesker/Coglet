@@ -11,8 +11,17 @@ export function setupTabs(root = document) {
     root.getElementById(tab.getAttribute("aria-controls")).dispatchEvent(new Event("tabshown"));
   }
 
+  function selectWithTransition(tab) {
+    if (typeof document !== "undefined" && typeof window !== "undefined" &&
+      document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.startViewTransition(() => select(tab));
+      return;
+    }
+    select(tab);
+  }
+
   for (const tab of tabs) {
-    tab.addEventListener("click", () => select(tab));
+    tab.addEventListener("click", () => selectWithTransition(tab));
     tab.addEventListener("keydown", event => {
       let index = tabs.indexOf(tab);
       if (event.key === "ArrowRight") index = (index + 1) % tabs.length;
@@ -21,7 +30,7 @@ export function setupTabs(root = document) {
       else if (event.key === "End") index = tabs.length - 1;
       else return;
       event.preventDefault();
-      select(tabs[index]);
+      selectWithTransition(tabs[index]);
       tabs[index].focus();
     });
   }

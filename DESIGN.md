@@ -1,7 +1,7 @@
 # Coglet diagnostics visual system
 
-The selected direction is a maintenance worksheet: warm paper, ruled evidence rows, and a serial transcript with a compact connection strip. The surface is an operating tool, not a marketing page.
+The diagnostics UI is a control cockpit for a small physical robot: a persistent navigation and connection strip frames focused workspaces for Logging, Motion, and Firmware. Keep the hardware's state and the next safe action easy to scan. This is an operating tool, not a marketing dashboard.
 
-Use paper `#f4f2eb`, sheet `#fffef9`, ink `#222b29`, muted ink `#56615b`, and green `#276553` for actions. Error and warning text always includes a written state. Ordinary interface text uses the desktop system sans; logs, measurements, and source evidence use monospace.
+Use cool light gray `#edf0ed`, white `#ffffff`, charcoal `#202622`, and Coglet yellow `#e6ad00` as the focused action and selection accent. Yellow controls use dark ink for readable text. Errors and warnings retain distinct, high-contrast written states; never imply hardware health from missing log evidence. Interface text uses the desktop system sans; captured logs, measurements, and source evidence use monospace.
 
-Desktop places diagnostic evidence beside the wider transcript. Narrow screens stack those regions. Controls retain visible labels, keyboard focus, disabled states, and explicit errors. Diagnostic rows expose source messages on demand. Report reveal is the only authored animation and respects reduced motion.
+Logging gives the transcript most of the desktop width and keeps the diagnostic evidence beside it. Motion puts the servo map and safe, explicit controls in one workbench. Firmware remains a deliberate preparation-and-upload flow. Narrow screens stack workspaces without hiding controls. Tabs preserve their existing state and use a supported shared-workspace transition, with an immediate fallback and reduced-motion behavior. Keep visible labels, keyboard focus, disabled states, and explicit errors.
