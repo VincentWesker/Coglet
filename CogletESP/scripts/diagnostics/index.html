@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Coglet diagnostics</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>Coglet diagnostics</h1><p>A quiet workbench for your companion.</p></div>
+      <span id="connection" role="status">Disconnected</span>
+    </header>
+    <section class="connection-bar" aria-label="USB connection">
+      <div><strong>USB serial console</strong><p>115200 baud · read-only · logs stay in this browser</p></div>
+      <button id="connect" class="primary">Connect Coglet</button>
+      <button id="disconnect" disabled>Disconnect</button>
+    </section>
+    <p id="notice" role="status">Connect the ESP32 USB console, or import a saved log to review it offline.</p>
+    <div class="workspace">
+      <section class="diagnostics" aria-labelledby="diagnostics-title">
+        <h2 id="diagnostics-title">Diagnostic evidence</h2>
+        <p>Review captured messages, not hardware health. No firmware commands are sent.</p>
+        <button id="analyze" class="primary" disabled>Run diagnostics</button>
+        <p id="analysis-status" role="status">Waiting for log data.</p>
+        <div id="results"><p class="empty">Your diagnostic report will appear here, with the log lines behind each finding.</p></div>
+      </section>
+      <section class="transcript" aria-labelledby="log-title">
+        <div class="section-heading"><h2 id="log-title">Serial log</h2><span id="count">0 lines</span></div>
+        <div class="log-tools">
+          <label>Search<input id="search" type="search" placeholder="Tag or message" maxlength="200"></label>
+          <label>Level<select id="level"><option value="all">All levels</option><option value="E">Errors</option><option value="W">Warnings</option><option value="I">Info</option><option value="D">Debug</option><option value="V">Verbose</option></select></label>
+          <button id="pause" disabled>Pause view</button>
+          <button id="export" disabled>Export log</button>
+          <button id="clear" disabled>Clear log</button>
+        </div>
+        <pre id="log" tabindex="0" aria-label="Captured serial log"><span class="empty">No messages yet.
+
+Connect Coglet and let it run. Startup logs are useful, but this UI does not reset the device.
+
+Already have a log? Import it below.</span></pre>
+        <div class="log-footer">
+          <label class="import-label">Import saved log<input id="import" type="file" accept=".log,.txt,text/plain"></label>
+          <span id="capture">Latest 5,000 lines retained</span>
+        </div>
+      </section>
+    </div>
+    <footer><p>Use Chrome or Edge on desktop, served from localhost or HTTPS. Close other serial monitors first.</p><p>Exports may include private conversation text. Review before sharing.</p></footer>
+  </main>
+</body>
+</html>

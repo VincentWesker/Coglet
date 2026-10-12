@@ -8,6 +8,9 @@ Refer to the [build video](https://www.youtube.com/watch?v=-7I-jFSNP2E).
 
 For further reading and troubleshooting, refer to the translated docs in this repo.
 
+For a read-only USB log viewer and captured-log diagnostics, see the
+[Coglet diagnostics UI](CogletESP/scripts/diagnostics/README.md).
+
 
 # Parts List
 Consider backing our [kickstarter](https://www.kickstarter.com/projects/willcogley/coglet-open-source-3d-printable-robot-companion-kit) so we can provide all the parts in [one place!](https://nmrobots.com/)
