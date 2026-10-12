@@ -109,7 +109,7 @@ input[type=checkbox] { width: 20px; height: 20px; min-height: 20px; flex-shrink:
 #servo-hotspots button { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); min-width: 44px; min-height: 44px; padding: 6px; border-color: #735700; background: var(--sheet); color: #735700; font-size: .8rem; font-weight: 600; box-shadow: 0 3px 8px #222b2929; }
 #servo-hotspots button:disabled { opacity: 1; color: var(--muted); border-color: var(--rule); cursor: not-allowed; }
 #servo-hotspots button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); }
-#servo-hotspots button[aria-pressed=true]:hover:not(:disabled) { background: #1b4d3e; }
+#servo-hotspots button[aria-pressed=true]:hover:not(:disabled) { background: #d49d00; }
 .servo-map figcaption { margin-top: 12px; color: var(--muted); font-size: .8rem; line-height: 1.6; }
 .servo-map a { color: #735700; text-underline-offset: 3px; }
 #servo-image-error { color: var(--error); font-size: .85rem; }
