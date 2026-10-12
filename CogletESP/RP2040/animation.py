@@ -611,6 +611,10 @@ def start_mcp_action(action_name, now=None):
     return True
 
 
+def cancel_mcp_action(now=None):
+    _finish_mcp_action(now, reason="USB diagnostics")
+
+
 def _finish_mcp_action(now=None, reason="timeout"):
     """Release MCP ownership and prepare the latest normal state to resume."""
     global new_state_flag
@@ -1359,6 +1363,5 @@ state_map={  #These emotion states mostly correspond to default "emojis" which X
 }
 
 #_________________#  #_________________#            
-
 
 

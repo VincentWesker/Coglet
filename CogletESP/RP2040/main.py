@@ -9,6 +9,7 @@ import math
 import animation
 from animation import servos
 from vision import EyeFollower
+from diagnostics_control import DiagnosticsControl
 
 ESP = UART(1, baudrate=115200, tx=Pin(4), rx=Pin(5))
 rx_buffer = b""
@@ -411,11 +412,34 @@ servo_outputs_enabled = servoclass.enable_outputs()
 # Calibration Mode is entered.
 _refresh_calibration_home()
 
+def _disable_diagnostic_outputs():
+    global servo_outputs_enabled
+    global sleep_settled_since
+    servoclass.disable_outputs()
+    servo_outputs_enabled = False
+    sleep_settled_since = None
+
+
+diagnostics = DiagnosticsControl(
+    animation, _enable_servo_outputs, _disable_diagnostic_outputs
+)
+usb_poll = uselect.poll()
+usb_poll.register(sys.stdin, uselect.POLLIN)
+
 
 while True:
     now = time.ticks_ms()
     dt = time.ticks_diff(now, last_time) / 1000.0
     last_time = now
+
+    # Bound USB work so a noisy host cannot starve calibration or servo updates.
+    for _ in range(128):
+        if not usb_poll.poll(0):
+            break
+        char = sys.stdin.read(1)
+        if not char:
+            break
+        diagnostics.feed(char, now, mode.value() == 0)
 
     if ESP.any():
         rx_buffer += ESP.read()   # bytes + bytes = OK
@@ -429,14 +453,15 @@ while True:
             # owns the requested action for exactly 2 seconds.
             if rcvstate.startswith("action:"):
                 action_name = rcvstate[7:].strip()
-                _enable_servo_outputs("MCP action {}".format(action_name))
-                animation.start_mcp_action(action_name, now)
+                if diagnostics.mode is None:
+                    _enable_servo_outputs("MCP action {}".format(action_name))
+                    animation.start_mcp_action(action_name, now)
                 continue
 
             # Any real non-idle XiaoZhi state wakes the servos before its
             # normal state/action logic runs. "idle" deliberately stays
             # enabled until pose_sleep has settled and the release delay ends.
-            if rcvstate != "idle" and rcvstate in animation.state_map:
+            if diagnostics.mode is None and rcvstate != "idle" and rcvstate in animation.state_map:
                 _enable_servo_outputs("state {}".format(rcvstate))
 
             # Speech activity and expression are two separate dimensions.
@@ -467,7 +492,8 @@ while True:
                     # before entering a different normal state. This prevents
                     # temporary tuning from excited/silly/shock/etc. leaking
                     # into the next expression.
-                    animation.reset_servo_motion_defaults()
+                    if diagnostics.mode is None:
+                        animation.reset_servo_motion_defaults()
 
                     animation.current_state = rcvstate
                     animation.new_state_flag = True
@@ -480,6 +506,7 @@ while True:
         _enable_servo_outputs("Calibration Mode")
 
     # --- START TEMPORARY ANIMATION TEST OVERRIDE ---
+    diagnostics_owns_servos = diagnostics.update(now, mode.value() == 0)
     calibration_owns_servos = _update_calibration_wiggle(now)
     mcp_owns_servos = False
 
@@ -500,6 +527,10 @@ while True:
             animation.current_state,
             enabled=False,
         )
+
+    elif diagnostics_owns_servos:
+        calibrate_bool = False
+        eye_follower.update(now, animation.current_state, enabled=False)
 
     else:
         calibrate_bool = False
@@ -563,10 +594,8 @@ while True:
     _update_sleep_torque_release(
         now,
         calibration_owns_servos,
-        mcp_owns_servos,
+        mcp_owns_servos or diagnostics_owns_servos,
     )
 
     time.sleep_ms(1)
-
-
 
