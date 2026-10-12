@@ -180,8 +180,10 @@ export function setupMotion(firmwareConnected = () => false) {
     $("motion-arm").disabled = !ready || calibrating || busy;
     $("servo-controls").disabled = !armed || busy;
     $("animation-controls").disabled = !armed || busy;
+    $("animation-play").disabled = !armed || busy;
     $("motion-resume").disabled = !armed || busy;
     $("motion-stop").disabled = !ready || calibrating;
+    $("animation-stop").disabled = !ready || calibrating;
     $("motion-connection").textContent = ready ? (calibrating ? "Calibration owns motion" : "Connected · RP2040") : connection ? "Connecting…" : "Disconnected";
     $("motion-connection").classList.toggle("live", ready);
     for (const button of hotspots) {
@@ -380,6 +382,7 @@ export function setupMotion(firmwareConnected = () => false) {
     const [kind, name] = $("animation-name").value.split(":");
     void command(kind, { name });
   });
+  $("animation-stop").addEventListener("click", () => void command("stop"));
   $("motion-stop").addEventListener("click", () => void command("stop"));
   $("motion-resume").addEventListener("click", () => void command("resume"));
   controls();
