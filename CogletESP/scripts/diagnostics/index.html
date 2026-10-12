@@ -11,26 +11,33 @@
 </head>
 <body>
   <main>
-    <header>
-      <div><h1>Coglet diagnostics</h1><p>A quiet workbench for your companion.</p></div>
+    <header class="app-header">
+      <div><h1>Coglet diagnostics</h1><p>Inspect console logs, tune motion, and install board firmware.</p></div>
     </header>
-    <div class="mode-navigation">
-      <div class="mode-tabs" role="tablist" aria-label="Diagnostics options">
-        <button id="logging-tab" type="button" role="tab" aria-selected="true" aria-controls="logging-panel">Logging</button>
-        <button id="motion-tab" type="button" role="tab" aria-selected="false" aria-controls="motion-panel" tabindex="-1">Motion</button>
-        <button id="firmware-tab" type="button" role="tab" aria-selected="false" aria-controls="firmware-panel" tabindex="-1">Firmware</button>
+    <div class="app-toolbar">
+      <div class="mode-navigation">
+        <div class="mode-tabs" role="tablist" aria-label="Diagnostics options">
+          <button id="logging-tab" type="button" role="tab" aria-selected="true" aria-controls="logging-panel">Logging</button>
+          <button id="motion-tab" type="button" role="tab" aria-selected="false" aria-controls="motion-panel" tabindex="-1">Motion</button>
+          <button id="firmware-tab" type="button" role="tab" aria-selected="false" aria-controls="firmware-panel" tabindex="-1">Firmware</button>
+        </div>
+        <button id="motion-stop" class="stop" disabled>Stop &amp; disable PWM</button>
       </div>
-      <button id="motion-stop" class="stop" disabled>Stop &amp; disable PWM</button>
+      <section class="connection-bar" aria-label="ESP32 USB serial connection">
+        <div><strong>ESP32 serial console</strong><p>115200 baud · read-only · logs stay in this browser</p></div>
+        <span id="connection" role="status">Disconnected</span>
+      </section>
     </div>
     <p class="tab-help">Switching tabs preserves logs, connections, active motion, and uploads. Disconnect before changing the board's USB selector.</p>
     <p id="motion-stop-status" role="status" hidden></p>
     <section id="logging-panel" role="tabpanel" aria-labelledby="logging-tab" tabindex="0">
-    <section class="connection-bar" aria-label="USB connection">
-      <div><strong>USB serial console</strong><p>115200 baud · read-only · logs stay in this browser</p></div>
-      <span id="connection" role="status">Disconnected</span>
-      <button id="connect" class="primary">Connect Coglet</button>
-      <button id="disconnect" disabled>Disconnect</button>
-    </section>
+    <div class="workspace-topbar">
+      <div class="workspace-title"><h2>Logging</h2><span class="workspace-status">ESP32 serial console</span></div>
+      <div class="workspace-actions">
+        <button id="connect" class="primary">Connect ESP32</button>
+        <button id="disconnect" disabled>Disconnect</button>
+      </div>
+    </div>
     <p id="notice" role="status">Connect the ESP32 USB console, or import a saved log to review it offline.</p>
     <div class="workspace">
       <section class="diagnostics" aria-labelledby="diagnostics-title">
@@ -62,12 +69,14 @@ Already have a log? Import it below.</span></pre>
     </div>
     </section>
     <section id="motion-panel" class="motion" role="tabpanel" aria-labelledby="motion-tab" tabindex="0" hidden>
-      <div class="section-heading"><h2 id="motion-title">Servos &amp; animations</h2><span id="motion-connection" role="status">Disconnected</span></div>
-      <p>Connect the <strong>RP2040 USB port</strong> separately from the ESP32 log console. Updated RP2040 firmware is required. Connecting does not request movement.</p>
-      <div class="motion-tools">
-        <button id="motion-connect">Connect motion USB</button>
-        <button id="motion-disconnect" disabled>Disconnect motion</button>
+      <div class="workspace-topbar">
+        <div class="workspace-title"><h2 id="motion-title">Servos &amp; animations</h2><span id="motion-connection" class="workspace-status" role="status">Disconnected</span></div>
+        <div class="workspace-actions">
+          <button id="motion-connect" class="primary">Connect motion USB</button>
+          <button id="motion-disconnect" disabled>Disconnect</button>
+        </div>
       </div>
+      <p>Connect the <strong>RP2040 USB port</strong> separately from the ESP32 log console. Updated RP2040 firmware is required. Connecting does not request movement.</p>
       <p class="motion-safety">Movement can pinch fingers or strain linkages. Clear the mechanism and use its calibrated limits. Stop disables PWM, not servo power; unsupported parts may drop. Physical Calibration Mode always has priority.</p>
       <label class="arm-label"><input id="motion-arm" type="checkbox" disabled> I have cleared the mechanism. Enable motion controls.</label>
       <p id="motion-notice" role="status">Connect motion USB to load servo limits and available animations from the firmware.</p>
@@ -120,7 +129,13 @@ Already have a log? Import it below.</span></pre>
       <div class="motion-footer"><button id="motion-resume" disabled>Resume normal behavior</button><p>Normal behavior may move the robot. If a USB override loses its heartbeat for 5 seconds, PWM is disabled until you request motion again or physical calibration takes control.</p></div>
     </section>
     <section id="firmware-panel" class="firmware" role="tabpanel" aria-labelledby="firmware-tab" tabindex="0" hidden>
-      <div class="section-heading"><h2>Upload RP2040 Python files</h2><span id="firmware-connection" role="status">Disconnected</span></div>
+      <div class="workspace-topbar">
+        <div class="workspace-title"><h2>Upload RP2040 Python files</h2><span id="firmware-connection" class="workspace-status" role="status">Disconnected</span></div>
+        <div class="workspace-actions">
+          <button id="firmware-connect" class="primary" disabled>Connect for upload</button>
+          <button id="firmware-disconnect" disabled>Disconnect</button>
+        </div>
+      </div>
       <p>Install local <code>.py</code> files through MicroPython's built-in USB REPL, including the first diagnostics update. MicroPython must already be installed; this does not flash UF2 or update the ESP32.</p>
       <div class="firmware-workspace">
         <section aria-labelledby="firmware-prepare-title">
@@ -129,10 +144,7 @@ Already have a log? Import it below.</span></pre>
           <p>Set Programming Selector to <strong>RP2040 (lower)</strong>, Calibration and Face Tracking <strong>OFF (right)</strong>, and Main Power <strong>OFF (right)</strong>. Leave BOOT and Servo Test released. Close Thonny and disconnect Logging and Motion first.</p>
           <label class="arm-label"><input id="firmware-safe" type="checkbox"> I have disconnected external servo power, supported the mechanism, and set these switches. I agree to interrupt the program.</label>
           <p id="firmware-blocked" class="error" hidden>Disconnect Logging and Motion before opening firmware USB. Existing sessions will not be closed for you.</p>
-          <div class="motion-tools">
-            <button id="firmware-connect" disabled>Connect for upload</button>
-            <button id="firmware-disconnect" disabled>Disconnect firmware USB</button>
-          </div>
+          <p>Connection remains disabled until this acknowledgement is selected.</p>
         </section>
         <section aria-labelledby="firmware-files-title">
           <h3 id="firmware-files-title">Review files to replace</h3>

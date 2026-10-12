@@ -89,3 +89,62 @@ test("the selected panel is notified after becoming visible", () => {
   tabs[1].dispatchEvent(new Event("click"));
   assert.equal(notified, true);
 });
+
+for (const reducedMotion of [false, true]) {
+  for (const activation of ["click", "keyboard"]) {
+    test(`${activation} selection ${reducedMotion ? "is immediate with reduced motion" : "runs inside the view transition"}`, t => {
+      const originals = ["document", "window"].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
+      t.after(() => {
+        for (const [name, descriptor] of originals) {
+          if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+          else delete globalThis[name];
+        }
+      });
+      let callback;
+      let transitions = 0;
+      Object.defineProperty(globalThis, "document", {
+        configurable: true,
+        value: {
+          startViewTransition(update) {
+            transitions++;
+            callback = update;
+          },
+        },
+      });
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: {
+          matchMedia(query) {
+            assert.equal(query, "(prefers-reduced-motion: reduce)");
+            return { matches: reducedMotion };
+          },
+        },
+      });
+      const { tabs, panels } = fixture();
+      assert.equal(transitions, 0);
+      let notifications = 0;
+      panels["motion-panel"].addEventListener("tabshown", () => {
+        notifications++;
+        assert.equal(panels["motion-panel"].hidden, false);
+      });
+
+      if (activation === "click") tabs[1].dispatchEvent(new Event("click"));
+      else assert.equal(key(tabs[0], "ArrowRight"), true);
+
+      if (!reducedMotion) {
+        assert.equal(transitions, 1);
+        assert.equal(panels["logging-panel"].hidden, false);
+        assert.equal(panels["motion-panel"].hidden, true);
+        assert.equal(notifications, 0);
+        callback();
+      } else {
+        assert.equal(transitions, 0);
+      }
+      assert.equal(panels["logging-panel"].hidden, true);
+      assert.equal(panels["motion-panel"].hidden, false);
+      assert.equal(tabs[1].getAttribute("aria-selected"), "true");
+      assert.deepEqual(tabs.map(tab => tab.tabIndex), [-1, 0, -1]);
+      assert.equal(notifications, 1);
+    });
+  }
+}
