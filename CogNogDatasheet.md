@@ -132,6 +132,7 @@ The system can be powered via the programming port, but no power will be deliver
 | Calibration Mode Switch | Via the RP2040, put all servos into a default position to assist with making sure all servos are properly calibrated when assembling |
 | Facetrack Mode Switch | Via the Grove Vision AI Board, track and follow user’s face in realtime (uses on-board local processing) |
 | Servo Test Button  | Via the RP2040, simultaneously wiggle all servos back and forth by a few degrees to check ROM and function during assembly/testing |
+| ESP BOOT Button | With the latest Coglet ESP firmware, press once while idle to start listening without the wakeword; press again to stop. In the V3.0 pinout above, it is the button immediately left of **SERVO TEST RP12**. Do not confuse it with the separate **RP2040 BOOT** button. |
 
 ## 2.3 Guides
 
