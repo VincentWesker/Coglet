@@ -225,6 +225,29 @@ test("visual picker and immediate arrows preserve arming, limits and acknowledge
   await until(() => mock.closed);
 });
 
+test("animation preview can be stopped from its controls", async t => {
+  const { $, mock } = motionFixture(t);
+  assert.equal($("animation-stop").disabled, true);
+  $("motion-connect").click();
+  await until(() => !$("motion-arm").disabled);
+  $("motion-arm").checked = true;
+  $("motion-arm").dispatchEvent(new Event("change"));
+  assert.equal($("animation-stop").disabled, false);
+  $("animation-name").value = "animation:sad";
+  const play = new Event("submit", { cancelable: true });
+  $("animation-form").dispatchEvent(play);
+  await until(() => mock.requests.some(request => request.command === "animation"));
+  $("animation-stop").click();
+  await until(() => mock.requests.some(request => request.command === "stop") && !$("motion-arm").checked);
+  assert.deepEqual(mock.requests.slice(1).map(({ command, name }) => ({ command, name })), [
+    { command: "animation", name: "sad" },
+    { command: "stop", name: undefined },
+  ]);
+  assert.match($("motion-notice").textContent, /PWM disabled/);
+  $("motion-disconnect").click();
+  await until(() => mock.closed);
+});
+
 test("an immediate arrow rejection disarms and closes motion without reporting a new target", async t => {
   const { $, mock, ui } = motionFixture(t, request => ({
     id: request.id, ok: false, error: "Calibration Mode owns the servos",
