@@ -121,9 +121,11 @@ Already have a log? Import it below.</span></pre>
             <legend>Animation preview</legend>
             <label>Preset<select id="animation-name"><option value="">Connect motion USB first</option></select></label>
             <p>Previews replace normal motion and pause face tracking. Expressions run until stopped; one-shot actions run for two seconds, then hold.</p>
-            <button type="submit">Play animation</button>
           </fieldset>
-          <div class="motion-tools"><button id="animation-stop" class="stop" type="button" disabled>Stop animation &amp; disable PWM</button></div>
+          <div class="motion-tools" role="group" aria-label="Animation actions">
+            <button id="animation-play" type="submit" disabled>Play animation</button>
+            <button id="animation-stop" class="stop" type="button" disabled>Stop animation &amp; disable PWM</button>
+          </div>
         </form>
         </div>
       </div>

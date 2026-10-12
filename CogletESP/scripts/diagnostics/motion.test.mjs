@@ -236,6 +236,8 @@ test("animation preview can be stopped from its controls", async t => {
   $("animation-name").value = "animation:sad";
   const play = new Event("submit", { cancelable: true });
   $("animation-form").dispatchEvent(play);
+  assert.equal($("animation-play").disabled, true, "Play stays disabled while its command is pending");
+  assert.equal($("animation-stop").disabled, false, "Stop remains available while a command is pending");
   await until(() => mock.requests.some(request => request.command === "animation"));
   $("animation-stop").click();
   await until(() => mock.requests.some(request => request.command === "stop") && !$("motion-arm").checked);

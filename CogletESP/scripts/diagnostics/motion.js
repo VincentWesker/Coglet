@@ -180,6 +180,7 @@ export function setupMotion(firmwareConnected = () => false) {
     $("motion-arm").disabled = !ready || calibrating || busy;
     $("servo-controls").disabled = !armed || busy;
     $("animation-controls").disabled = !armed || busy;
+    $("animation-play").disabled = !armed || busy;
     $("motion-resume").disabled = !armed || busy;
     $("motion-stop").disabled = !ready || calibrating;
     $("animation-stop").disabled = !ready || calibrating;
